@@ -122,7 +122,7 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
     {
 		global $wp;
 
-        if ( is_admin() ) return;
+        if ( is_admin() || current_user_can('manage_options') ) return;
 
         $this->output_global_tracking_code();
 
