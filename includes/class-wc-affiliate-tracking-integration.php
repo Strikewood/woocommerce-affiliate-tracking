@@ -32,6 +32,9 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
         $this->upsellit       = $this->get_option('at_upsellit');
 
         // Network data
+        $this->avangate_id       = $this->get_option('at_avangate_id');
+        $this->facebook_id       = $this->get_option('at_facebook_id');
+        $this->impact_radius_src = $this->get_option('at_impact_radius_src');
         $this->link_connector_id = $this->get_option('at_link_connector_id');
         $this->upsellit_id       = $this->get_option('at_upsellit_id');
         $this->upsellit_name     = $this->get_option('at_upsellit_name');
@@ -51,14 +54,29 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
     public function init_form_fields()
     {
         $this->form_fields = [
+            'at_avangate_id' => [
+                'title'         => __('Avangate ID:', 'woocommerce-affiliate-tracking'),
+                'description'   => __('Merchant ID for Avangate.', 'woocommerce-affiliate-tracking'),
+                'type'          => 'text'
+            ],
+            'at_facebook_id' => [
+                'title'         => __('Facebook ID:', 'woocommerce-affiliate-tracking'),
+                'description'   => __('Pixel ID for Facebook.', 'woocommerce-affiliate-tracking'),
+                'type'          => 'text'
+            ],
+            'at_impact_radius_src' => [
+                'title'         => __('Impact Radius URL:', 'woocommerce-affiliate-tracking'),
+                'description'   => __('URL to Impact Radius script. Example: <code>XXXXXXXXXXX.cloudfront.net/js/XXXX/XXXXX/irv3.js</code>', 'woocommerce-affiliate-tracking'),
+                'type'          => 'text'
+            ],
             'at_link_connector_id' => [
                 'title'         => __('Link Connector ID:', 'woocommerce-affiliate-tracking'),
-                'description'   => __('Account ID for Link Connector. Example: 000000001234', 'woocommerce-affiliate-tracking'),
+                'description'   => __('Account ID for Link Connector.', 'woocommerce-affiliate-tracking'),
                 'type'          => 'text'
             ],
             'at_upsellit_id' => [
                 'title'         => __('UpSellit ID:', 'woocommerce-affiliate-tracking'),
-                'description'   => __('Site ID for UpSellit. Example: 1234', 'woocommerce-affiliate-tracking'),
+                'description'   => __('Site ID for UpSellit.', 'woocommerce-affiliate-tracking'),
                 'type'          => 'text'
             ],
             'at_upsellit_name' => [
@@ -124,68 +142,10 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
      */
     public function output_global_tracking_code()
     {
-        if ('yes' == $this->facebook)
-        {
-
-        }
-
         if ('yes' == $this->upsellit)
         {
             $this->output_upsellit_global_code();
         }
-    }
-
-    /**
-     * Output the order tracking code for enabled networks
-     *
-     * @param int $order_id
-     *
-     * @return string
-     */
-    public function output_order_tracking_code($order_id)
-    {
-        $order = new WC_Order($order_id);
-
-        if ('yes' == $this->impact_radius)
-        {
-
-        }
-
-        if ('yes' == $this->facebook)
-        {
-
-        }
-
-        if ('yes' == $this->link_connector)
-        {
-            $this->output_link_connector_order_code($order);
-        }
-
-        if ('yes' == $this->upsellit)
-        {
-            $this->output_upsellit_order_code($order);
-        }
-    }
-
-    /**
-     * Output the order tracking code for link connector
-     *
-     * @param WC_Order $order
-     *
-     * @return string
-     */
-    public function output_link_connector_order_code($order)
-    {
-        if ( !$this->link_connector_id ) return;
-
-        $src_params = '?lc=' . esc_js($this->link_connector_id) . '&amp;oid=' . esc_js( $order->get_order_number() ) . '&amp;amt=' . esc_js( $order->get_total() );
-
-        $script_src = 'https://linkconnector.com/tmjs.php' . $src_params;
-        $img_src    = 'https://linkconnector.com/tm.php' . $src_params;
-
-        $code = '<script src="' . $script_src . '"></script><noscript><img border="0" src="" alt=""></noscript>';
-
-        echo $code;
     }
 
     /**
@@ -213,6 +173,185 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
         USI_installCode();
     }
 /* ]]> */</script>';
+
+        echo $code;
+    }
+
+    /**
+     * Output the order tracking code for enabled networks
+     *
+     * @param int $order_id
+     *
+     * @return string
+     */
+    public function output_order_tracking_code($order_id)
+    {
+        $order = new WC_Order($order_id);
+
+        if ('yes' == $this->avangate)
+        {
+            $this->output_avangate_order_code($order);
+        }
+
+        if ('yes' == $this->impact_radius)
+        {
+            $this->output_impact_radius_order_code($order);
+        }
+
+        if ('yes' == $this->facebook)
+        {
+            $this->output_facebook_order_code($order);
+        }
+
+        if ('yes' == $this->link_connector)
+        {
+            $this->output_link_connector_order_code($order);
+        }
+
+        if ('yes' == $this->upsellit)
+        {
+            $this->output_upsellit_order_code($order);
+        }
+    }
+
+    /**
+     * Output the order tracking code for avangate
+     *
+     * @param WC_Order $order
+     *
+     * @return string
+     */
+    public function output_avangate_order_code($order)
+    {
+        if ( !$this->avangate_id ) return;
+
+        $code  = '<script src="https://affiliates.avangate.com/js/track.js"></script>';
+        $code .= '<script>/* <![CDATA[ */
+    window.onload = function () {
+        tracking = new AVGTracking(\'https://affiliates.avangate.com/track_click.php\');
+        tracking.merch = \'' . esc_js($this->avangate_id) . '\';
+        tracking.ref = \'' . esc_js( $order->get_order_number() ) . '\';
+        tracking.currency = \'' . esc_js( $order->get_order_currency() ) . '\';
+        tracking.totalPrice = ' . esc_js( $order->get_total() ) . ';';
+
+        if ( $order->get_items() )
+        {
+            foreach ( $order->get_items() as $item )
+            {
+                $_product = $order->get_product_from_item($item);
+                $sku      = $_product->get_sku() ? $_product->get_sku() : $_product->id;
+                $price    = round( $order->get_item_total($item) / $item['qty'], 2 );
+
+                $code .= '
+    tracking.addProduct(\'' . esc_js( $item['name'] ) . '\', ' . esc_js( $price ) . ', ' . esc_js($item['qty']) . ', \'' . esc_js($sku) . '\');';
+            }
+        }
+
+        $code .= '
+        tracking.init();
+    }
+/* ]]> */</script>';
+
+        echo $code;
+    }
+
+    /**
+     * Output the order tracking code for facebook
+     *
+     * @param WC_Order $order
+     *
+     * @return string
+     */
+    public function output_facebook_order_code($order)
+    {
+        if ( !$this->facebook_id ) return;
+
+        $code  = '<script>/* <![CDATA[ */
+    (function() {
+        var _fbq = window._fbq || (window._fbq = []);
+        if (!_fbq.loaded) {
+            var fbds = document.createElement(\'script\');
+            fbds.async = true;
+            fbds.src = \'//connect.facebook.net/en_US/fbds.js\';
+            var s = document.getElementsByTagName(\'script\')[0];
+                s.parentNode.insertBefore(fbds, s);
+            _fbq.loaded = true;
+        }
+    })();
+    window._fbq = window._fbq || [];
+    window._fbq.push([\'track\', \'' . esc_js($this->facebook_id) . '\', {\'value\':\'' . esc_js( $order->get_total() ) . '\',\'currency\':\'' . esc_js( $order->get_order_currency() ) . '\'}]);
+/* ]]> */</script>';
+        $code .= '<noscript><img height="1" width="1" alt="" style="display:none" src="https://www.facebook.com/tr?ev=' . urlencode($this->facebook_id) . '&amp;cd[value]=' . urlencode( $order->get_total() ) . '&amp;cd[currency]=' . urlencode( $order->get_order_currency() ) . '&amp;noscript=1" /></noscript>';
+
+        echo $code;
+    }
+
+    /**
+     * Output the order tracking code for link connector
+     *
+     * @param WC_Order $order
+     *
+     * @return string
+     */
+    public function output_impact_radius_order_code($order)
+    {
+        if ( !$this->impact_radius_src ) return;
+
+        $code  = '<script src="' . urlencode($this->impact_radius_src) . '"></script>';
+        $code .= '<script>/* <![CDATA[ */
+    irEvent.setOrderId("' . esc_js( $order->get_order_number() ) . '");';
+
+        if ( $order->get_items() )
+        {
+            foreach ( $order->get_items() as $item )
+            {
+                $_product   = $order->get_product_from_item($item);
+                $categories = get_the_terms($_product->id, 'product_cat');
+
+                if ($categories)
+                {
+                    $category = $category[0]->name;
+                }
+
+                $sku = $_product->get_sku() ? $_product->get_sku() : $_product->id;
+
+                $code .= '
+    irEvent.addItem("' . esc_js($category) . '", "' . esc_js($sku) . '", "' . esc_js( $order->get_item_total($item) ) . '", "' . esc_js($item['qty']) . '");';
+            }
+        }
+
+        $coupons = $order->get_used_coupons();
+
+        if ($coupons)
+        {
+            $coupon = $coupons[0];
+        }
+
+        $code .= '
+    irEvent.setPromoCode("' . esc_js($coupon) . '");
+    irEvent.fire();
+/* ]]> */</script>';
+
+        echo $code;
+    }
+
+    /**
+     * Output the order tracking code for link connector
+     *
+     * @param WC_Order $order
+     *
+     * @return string
+     */
+    public function output_link_connector_order_code($order)
+    {
+        if ( !$this->link_connector_id ) return;
+
+        $src_params = '?lc=' . urlencode($this->link_connector_id) . '&amp;oid=' . urlencode( $order->get_order_number() ) . '&amp;amt=' . urlencode( $order->get_total() );
+
+        $script_src = 'https://linkconnector.com/tmjs.php' . $src_params;
+        $img_src    = 'https://linkconnector.com/tm.php' . $src_params;
+
+        $code = '<script src="' . $script_src . '"></script><noscript><img border="0" src="" alt=""></noscript>';
 
         echo $code;
     }
