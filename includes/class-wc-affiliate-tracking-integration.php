@@ -120,6 +120,8 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
      */
     public function display_tracking_code()
     {
+		global $wp;
+
         if ( is_admin() ) return;
 
         $this->output_global_tracking_code();
@@ -162,7 +164,7 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
         var USI_headID = document.getElementsByTagName("head")[0];
         var USI_installID = document.createElement(\'script\');
         USI_installID.type = \'text/javascript\';
-        USI_installID.src = \'http\'+ (document.location.protocol==\'https:\'?\'s://www\':\'://www\')+ \'.upsellit.com/launch/' . esc_js($this->upsellit_name) . '\';
+        USI_installID.src = \'http\'+ (document.location.protocol==\'https:\'?\'s://www\':\'://www\')+ \'.upsellit.com/launch/' . esc_js($this->upsellit_name) . '.jsp\';
         USI_headID.appendChild(USI_installID);
     }
     if (window.addEventListener){
@@ -297,7 +299,7 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
     {
         if ( !$this->impact_radius_src ) return;
 
-        $code  = '<script src="' . urlencode($this->impact_radius_src) . '"></script>';
+        $code  = '<script src="https://' . $this->impact_radius_src . '"></script>';
         $code .= '<script>/* <![CDATA[ */
     irEvent.setOrderId("' . esc_js( $order->get_order_number() ) . '");';
 
@@ -308,10 +310,7 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
                 $_product   = $order->get_product_from_item($item);
                 $categories = get_the_terms($_product->id, 'product_cat');
 
-                if ($categories)
-                {
-                    $category = $category[0]->name;
-                }
+                $category = $categories ? $category[0]->name : '';
 
                 $sku = $_product->get_sku() ? $_product->get_sku() : $_product->id;
 
@@ -322,10 +321,7 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
 
         $coupons = $order->get_used_coupons();
 
-        if ($coupons)
-        {
-            $coupon = $coupons[0];
-        }
+        $coupon = $coupons ? $coupons[0] : '';
 
         $code .= '
     irEvent.setPromoCode("' . esc_js($coupon) . '");
