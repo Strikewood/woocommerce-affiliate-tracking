@@ -9,6 +9,7 @@
         "wordpress"
     ],
     "homepage": "https://github.com/strikewood/woocommerce-affiliate-tracking",
+    "license": "MIT",
     "authors": [
         {
             "name": "Jan Pingel",
