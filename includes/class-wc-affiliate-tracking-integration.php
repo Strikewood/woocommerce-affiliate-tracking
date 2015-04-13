@@ -347,7 +347,7 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
         $script_src = 'https://linkconnector.com/tmjs.php' . $src_params;
         $img_src    = 'https://linkconnector.com/tm.php' . $src_params;
 
-        $code = '<script src="' . $script_src . '"></script><noscript><img border="0" src="" alt=""></noscript>';
+        $code = '<script src="' . $script_src . '"></script><noscript><img border="0" src="' . $img_src . '" alt=""></noscript>';
 
         echo $code;
     }
