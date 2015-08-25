@@ -56,7 +56,7 @@ class WC_Affiliate_Tracking
      *
      * @param array $integrations WooCommerce integrations
      *
-     * @return array Varar integration
+     * @return array WC_Facebook_Remarketing_Integration
      */
     public function add_integration($integrations)
     {
