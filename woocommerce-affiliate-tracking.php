@@ -37,9 +37,9 @@ class WC_Affiliate_Tracking
     }
 
     /**
-     * Main Varar instance, ensures only one instance is/can be loaded.
+     * Main WC_Affiliate_Tracking instance, ensures only one instance is/can be loaded.
      *
-     * @return WC_Varar
+     * @return WC_Affiliate_Tracking
      */
     public static function get_instance()
     {
