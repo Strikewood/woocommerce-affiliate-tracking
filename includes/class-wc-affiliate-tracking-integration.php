@@ -126,6 +126,11 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
 
         $this->output_global_tracking_code();
 
+        if ( is_product() )
+        {
+            $this->output_product_tracking_code();
+        }
+
         if ( is_order_received_page() )
         {
             $order_id = isset($wp->query_vars['order-received']) ? $wp->query_vars['order-received'] : 0;
@@ -148,6 +153,11 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
         {
             $this->output_upsellit_global_code();
         }
+
+        if ('yes' == $this->facebook)
+        {
+            $this->output_facebook_global_code();
+        }
     }
 
     /**
@@ -159,22 +169,78 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
     {
         if ( !$this->upsellit_id || !$this->upsellit_name ) return;
 
-        $code = '<script>/* <![CDATA[ */
+        $code = "<script>/* <![CDATA[ */
     function USI_installCode() {
-        var USI_headID = document.getElementsByTagName("head")[0];
+        var USI_headID = document.getElementsByTagName('head')[0];
         var USI_installID = document.createElement(\'script\');
-        USI_installID.type = \'text/javascript\';
-        USI_installID.src = \'http\'+ (document.location.protocol==\'https:\'?\'s://www\':\'://www\')+ \'.upsellit.com/launch/' . esc_js($this->upsellit_name) . '.jsp\';
+        USI_installID.type = 'text/javascript';
+        USI_installID.src = 'http'+ (document.location.protocol=='https:'?'s://www':'://www')+ '.upsellit.com/launch/". esc_js($this->upsellit_name) .".jsp';
         USI_headID.appendChild(USI_installID);
     }
     if (window.addEventListener){
-        window.addEventListener(\'load\', USI_installCode, true);
+        window.addEventListener('load', USI_installCode, true);
     } else if (window.attachEvent) {
-        window.attachEvent(\'onload\', USI_installCode);
+        window.attachEvent('onload', USI_installCode);
     } else {
         USI_installCode();
     }
-/* ]]> */</script>';
+/* ]]> */</script>";
+
+        echo $code;
+    }
+
+    /**
+     * Output the global tracking code for facebook
+     *
+     * @return string
+     */
+    public function output_facebook_global_code()
+    {
+        if ( !$this->facebook_id ) return;
+
+        $code  = "<script>/* <![CDATA[ */
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window,document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '". esc_js($this->facebook_id) ."');
+    fbq('track', 'PageView');
+/* ]]> */</script>";
+        $code .= '<noscript><img height="1" width="1" alt="" style="display:none" src="https://www.facebook.com/tr?id=' . urlencode($this->facebook_id) . '&amp;ev=PageView&amp;noscript=1" /></noscript>';
+
+        echo $code;
+    }
+
+    /**
+     * Output the product page tracking code for enabled networks
+     *
+     * @return string
+     */
+    public function output_product_tracking_code()
+    {
+        if ('yes' == $this->facebook)
+        {
+            $this->output_facebook_product_code();
+        }
+    }
+
+    /**
+     * Output the product page tracking code for facebook
+     *
+     * @return string
+     */
+    public function output_facebook_product_code()
+    {
+        if ( !$this->facebook_id ) return;
+
+        $code  = "<script>/* <![CDATA[ */
+    fbq('track', 'ViewContent');
+/* ]]> */</script>";
+        $code .= '<noscript><img height="1" width="1" alt="" style="display:none" src="https://www.facebook.com/tr?id='. urlencode($this->facebook_id) .'&amp;ev=ViewContent&amp;noscript=1" /></noscript>';
 
         echo $code;
     }
@@ -268,22 +334,10 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
     {
         if ( !$this->facebook_id ) return;
 
-        $code  = '<script>/* <![CDATA[ */
-    (function() {
-        var _fbq = window._fbq || (window._fbq = []);
-        if (!_fbq.loaded) {
-            var fbds = document.createElement(\'script\');
-            fbds.async = true;
-            fbds.src = \'//connect.facebook.net/en_US/fbds.js\';
-            var s = document.getElementsByTagName(\'script\')[0];
-                s.parentNode.insertBefore(fbds, s);
-            _fbq.loaded = true;
-        }
-    })();
-    window._fbq = window._fbq || [];
-    window._fbq.push([\'track\', \'' . esc_js($this->facebook_id) . '\', {\'value\':\'' . esc_js( $order->get_total() ) . '\',\'currency\':\'' . esc_js( $order->get_order_currency() ) . '\'}]);
-/* ]]> */</script>';
-        $code .= '<noscript><img height="1" width="1" alt="" style="display:none" src="https://www.facebook.com/tr?ev=' . urlencode($this->facebook_id) . '&amp;cd[value]=' . urlencode( $order->get_total() ) . '&amp;cd[currency]=' . urlencode( $order->get_order_currency() ) . '&amp;noscript=1" /></noscript>';
+        $code  = "<script>/* <![CDATA[ */
+    fbq('track', 'Purchase', {value: '". esc_js( $order->get_total() ) ."', currency: '". esc_js( $order->get_order_currency() ) ."'});
+/* ]]> */</script>";
+        $code .= '<noscript><img height="1" width="1" alt="" style="display:none" src="https://www.facebook.com/tr?id='. urlencode($this->facebook_id) .'&amp;cd[value]='. urlencode( $order->get_total() ) .'&amp;cd[currency]='. urlencode( $order->get_order_currency() ) .'&amp;noscript=1" /></noscript>';
 
         echo $code;
     }
