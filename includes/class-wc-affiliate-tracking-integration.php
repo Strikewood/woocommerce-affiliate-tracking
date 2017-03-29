@@ -172,7 +172,7 @@ class WC_Affiliate_Tracking_Integration extends WC_Integration
         $code = "<script>/* <![CDATA[ */
     function USI_installCode() {
         var USI_headID = document.getElementsByTagName('head')[0];
-        var USI_installID = document.createElement(\'script\');
+        var USI_installID = document.createElement('script');
         USI_installID.type = 'text/javascript';
         USI_installID.src = 'http'+ (document.location.protocol=='https:'?'s://www':'://www')+ '.upsellit.com/launch/". esc_js($this->upsellit_name) .".jsp';
         USI_headID.appendChild(USI_installID);

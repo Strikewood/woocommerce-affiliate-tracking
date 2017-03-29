@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce Affiliate Tracking
  * Plugin URI:  https://github.com/Strikewood/woocommerce-affiliate-tracking
  * Description: Affiliate tracking extension for WooCommerce.
- * Version:     0.2
+ * Version:     0.2.1
  * Author:      Strikewood Studios
  * Author URI:  http://strikewood.com/
  */
